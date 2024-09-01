@@ -38,16 +38,19 @@ done
 
 filter_complex="nullsrc=size=1080x1920:d=${max_duration} [base];"
 for i in {0..8}; do
-    filter_complex+="[$i:v] setpts=PTS-STARTPTS, scale=360x640, pad=width=360:height=640:color=black, loop=loop=-1:size=${max_duration}*30:start=0 [video$i];"
+    filter_complex+="[$i:v] setpts=PTS-STARTPTS, scale=360x640 [scaled$i];"
+    filter_complex+="color=c=black:s=360x640:d=${max_duration} [black$i];"
+    filter_complex+="[scaled$i] fade=t=out:st=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ${input_files[$i]}):d=1 [faded$i];"
+    filter_complex+="[black$i][faded$i] overlay=shortest=1 [video$i];"
 done
 
 overlay_positions=("0:0" "360:0" "720:0" "0:640" "360:640" "720:640" "0:1280" "360:1280" "720:1280")
 tmp_name="tmp1"
-filter_complex+="[base][video0] overlay=shortest=0:x=${overlay_positions[0]%:*}:y=${overlay_positions[0]#*:} [$tmp_name];"
+filter_complex+="[base][video0] overlay=x=${overlay_positions[0]%:*}:y=${overlay_positions[0]#*:} [$tmp_name];"
 
 for i in {1..8}; do
     next_tmp=$([[ $i -eq 8 ]] && echo "outv" || echo "tmp$((i + 1))")
-    filter_complex+="[$tmp_name][video$i] overlay=shortest=0:x=${overlay_positions[$i]%:*}:y=${overlay_positions[$i]#*:} [$next_tmp];"
+    filter_complex+="[$tmp_name][video$i] overlay=x=${overlay_positions[$i]%:*}:y=${overlay_positions[$i]#*:} [$next_tmp];"
     tmp_name=$next_tmp
 done
 
