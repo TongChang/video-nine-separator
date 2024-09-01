@@ -20,23 +20,23 @@ for file in "${input_files[@]}"; do
     ffmpeg_command+=" -i \"$file\""
 done
 
-ffmpeg_command+=" -filter_complex \""
-ffmpeg_command+="nullsrc=size=1080x1920 [base];"
+filter_complex="nullsrc=size=1080x1920 [base];"
 for i in {0..8}; do
-    ffmpeg_command+="[$i:v] setpts=PTS-STARTPTS, scale=360x640 [video$i];"
+    filter_complex+="[$i:v] setpts=PTS-STARTPTS, scale=360x640 [video$i];"
 done
 
 overlay_positions=("0:0" "360:0" "720:0" "0:640" "360:640" "720:640" "0:1280" "360:1280" "720:1280")
 tmp_name="tmp1"
-ffmpeg_command+="[base][video0] overlay=shortest=1:x=${overlay_positions[0]} [$tmp_name];"
+filter_complex+="[base][video0] overlay=shortest=1:x=${overlay_positions[0]%:*}:y=${overlay_positions[0]#*:} [$tmp_name];"
 
 for i in {1..8}; do
     next_tmp=$([[ $i -eq 8 ]] && echo "outv" || echo "tmp$((i + 1))")
-    ffmpeg_command+="[$tmp_name][video$i] overlay=shortest=1:x=${overlay_positions[$i]} [$next_tmp];"
+    filter_complex+="[$tmp_name][video$i] overlay=shortest=1:x=${overlay_positions[$i]%:*}:y=${overlay_positions[$i]#*:} [$next_tmp];"
     tmp_name=$next_tmp
 done
 
-ffmpeg_command+="\" -map \"[outv]\" -map 0:a -c:v libx264 -c:a aac -shortest \"/app/output/output.mp4\""
+ffmpeg_command+=" -filter_complex \"$filter_complex\""
+ffmpeg_command+=" -map \"[outv]\" -map 0:a -c:v libx264 -preset fast -crf 23 -c:a aac -shortest \"/app/output/output.mp4\""
 
 # FFmpegコマンドを実行
 echo "FFmpegコマンドを実行中..."
