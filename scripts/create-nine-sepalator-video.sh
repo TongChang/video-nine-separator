@@ -35,7 +35,7 @@ for i in {1..8}; do
     tmp_name=$next_tmp
 done
 
-ffmpeg_command+=" -filter_complex \"$filter_complex\""
+ffmpeg_command+=" -filter_complex \"${filter_complex%?}\""
 ffmpeg_command+=" -map \"[outv]\" -map 0:a -c:v libx264 -preset fast -crf 23 -c:a aac -shortest \"/app/output/output.mp4\""
 
 # FFmpegコマンドを実行
