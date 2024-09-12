@@ -63,3 +63,10 @@ echo "コマンド: $ffmpeg_command"
 eval $ffmpeg_command
 
 echo "処理が完了しました。出力ファイル: /app/output/${output_filename}"
+
+# TikTok Studio アップロードリンクを表示
+echo "----------------------------------------"
+echo "動画の処理が完了しました。"
+echo "TikTok Studio にアップロードするには以下のリンクを使用してください："
+echo "https://www.tiktok.com/tiktokstudio/upload"
+echo "----------------------------------------"
